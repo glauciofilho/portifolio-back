@@ -29,3 +29,19 @@ class File(models.Model):
         return self.path.split('/')[-1]
     def __str__(self):
         return f"{self.project.name_pt} :: {self.path}"
+
+class ProjectAccess(models.Model):
+    project = models.ForeignKey(
+        Project,
+        related_name='accesses',
+        on_delete=models.CASCADE
+    )
+
+    ip_address = models.GenericIPAddressField()
+    country = models.CharField(max_length=100, blank=True)
+    user_agent = models.TextField(blank=True)
+
+    accessed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.project.name_pt} - {self.ip_address}"
