@@ -6,16 +6,14 @@ while ! nc -z "$DB_HOST" "$DB_PORT"; do
   sleep 1
 done
 
-echo "✅ Banco disponível"
+echo "✅ Banco de dados disponível"
 
+echo "🔄 Aplicando migrations..."
 python manage.py migrate --noinput
 
-echo "📦 Coletando arquivos estáticos..."
-python manage.py collectstatic --noinput
+echo "👤 Verificando superuser..."
 
-echo "👤 Criando superusuário (se não existir)..."
-
-python manage.py shell <<EOF
+python manage.py shell << END
 from django.contrib.auth import get_user_model
 import os
 
@@ -27,13 +25,20 @@ password = os.getenv("DJANGO_SUPERUSER_PASSWORD")
 
 if username and password:
     if not User.objects.filter(username=username).exists():
-        User.objects.create_superuser(username, email, password)
-        print("Superusuário criado")
+        User.objects.create_superuser(
+            username=username,
+            email=email,
+            password=password
+        )
+        print("✅ Superuser criado")
     else:
-        print("Superusuário já existe")
+        print("ℹ️ Superuser já existe")
 else:
-    print("Variáveis de superusuário não definidas")
-EOF
+    print("⚠️ Variáveis de superuser não definidas")
+END
 
-echo "🚀 Iniciando servidor"
+echo "📦 Coletando arquivos estáticos..."
+python manage.py collectstatic --noinput
+
+echo "🚀 Iniciando servidor..."
 exec "$@"
